@@ -1,0 +1,22 @@
+{
+	"name":        "wearerequired/composer-scripts",
+	"description": "Helpful Composer scripts used by required.",
+	"type":        "package",
+	"license":     "GPL-2.0+",
+	"authors":     [
+		{
+			"name":     "required",
+			"email":    "info@required.ch",
+			"homepage": "https://required.com",
+			"role":     "Developer"
+		}
+	],
+	"require":     {
+		"php": ">=5.6"
+	},
+	"autoload":    {
+		"psr-4": {
+			"Required\\ComposerScripts\\": "src"
+		}
+	}
+}
