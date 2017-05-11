@@ -98,9 +98,7 @@ class PluginAvailability {
 	 */
 	protected static function isPluginAvailable( $url ) {
 		try {
-			$result = file_get_contents( $url, false );
-
-			$result = json_decode( $result, true );
+			$result = self::loadPluginData( $url );
 
 			return null !== $result;
 		} catch( ErrorException $e ) {
@@ -117,9 +115,7 @@ class PluginAvailability {
 	 */
 	protected static function isPluginActivelyMaintained( $url ) {
 		try {
-			$result = file_get_contents( $url, false );
-
-			$result = json_decode( $result, true );
+			$result = self::loadPluginData( $url );
 
 			if ( null === $result ) {
 				return false;
@@ -132,5 +128,20 @@ class PluginAvailability {
 		} catch ( ErrorException $e ) {
 			return false;
 		}
+	}
+
+	/**
+	 * Loads data for a given plugin and tries to interpret the result as JSON.
+
+	 * @param string $url Plugin URL.
+	 *
+	 * @return array|null Plugin data on success, null on failure.
+	 */
+	protected static function loadPluginData( $url ) {
+		$result = file_get_contents( $url, false );
+
+		$result = json_decode( $result, true );
+
+		return $result;
 	}
 }
