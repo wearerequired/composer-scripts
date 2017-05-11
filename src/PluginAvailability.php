@@ -10,6 +10,7 @@ namespace Required\ComposerScripts;
 use Composer\DependencyResolver\Operation\InstallOperation;
 use Composer\Installer\PackageEvent;
 use Composer\Package\PackageInterface;
+use ErrorException;
 
 class PluginAvailability {
 	/**
@@ -19,7 +20,7 @@ class PluginAvailability {
 	 * it has been temporarily or permanently removed because guideline violations,
 	 * abandonce by its developer, or even security issues.
 	 *
-	 * @param \Composer\Installer\PackageEvent $event The current event.
+	 * @param PackageEvent $event The current event.
 	 */
 	public static function checkAvailability( PackageEvent $event ) {
 		$package = self::getPackage( $event );
@@ -38,7 +39,7 @@ class PluginAvailability {
 	 * Plugins that haven't been updated in a while should be used with caution, as it means
 	 * they might not be compatible with the latest versions of WordPress.
 	 *
-	 * @param \Composer\Installer\PackageEvent $event The current event.
+	 * @param PackageEvent $event The current event.
 	 */
 	public static function checkMaintenanceStatus( PackageEvent $event ) {
 		$package = self::getPackage( $event );
@@ -54,7 +55,7 @@ class PluginAvailability {
 	/**
 	 * Returns the package referenced by the current event.
 	 *
-	 * @param \Composer\Installer\PackageEvent $event The current event.
+	 * @param PackageEvent $event The current event.
 	 *
 	 * @return PackageInterface The current package.
 	 */
@@ -68,7 +69,7 @@ class PluginAvailability {
 	 *
 	 * WPackagist is a mirror of the WordPress Plugin Directory.
 	 *
-	 * @param \Composer\Package\PackageInterface $package The current package.
+	 * @param PackageInterface $package The current package.
 	 *
 	 * @return bool True if package is a WordPress plugin, false otherwise.
 	 */
@@ -79,7 +80,7 @@ class PluginAvailability {
 	/**
 	 * Returns the URL to the plugin in the WordPress Plugin Directory.
 	 *
-	 * @param \Composer\Package\PackageInterface $package The current package.
+	 * @param PackageInterface $package The current package.
 	 *
 	 * @return string The plugin URL.
 	 */
@@ -103,7 +104,7 @@ class PluginAvailability {
 
 		try {
 			file_get_contents( $url, false, $context );
-		} catch( \ErrorException $e ) {
+		} catch( ErrorException $e ) {
 			return false;
 		}
 
@@ -120,7 +121,7 @@ class PluginAvailability {
 	protected static function isPluginActivelyMaintained( $url ) {
 		try {
 			$body = file_get_contents( $url, false );
-		} catch( \ErrorException $e ) {
+		} catch( ErrorException $e ) {
 			return true;
 		}
 
