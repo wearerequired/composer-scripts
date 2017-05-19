@@ -10,6 +10,7 @@ namespace Required\ComposerScripts;
 use Composer\DependencyResolver\Operation\InstallOperation;
 use Composer\Installer\PackageEvent;
 use Composer\Package\PackageInterface;
+use DateTime;
 use ErrorException;
 
 class PluginAvailability {
@@ -85,7 +86,7 @@ class PluginAvailability {
 	 * @return string The plugin URL.
 	 */
 	protected static function getPluginURL( PackageInterface $package ) {
-		return 'https://wordpress.org/plugins/' . str_replace( 'wpackagist-plugin/', '', $package->getName() );
+		return 'https://api.wordpress.org/plugins/info/1.0/' . str_replace( 'wpackagist-plugin/', '', $package->getName() ) . '.json';
 	}
 
 	/**
@@ -96,19 +97,13 @@ class PluginAvailability {
 	 * @return bool True if the plugin is available, false if otherwise (404 status).
 	 */
 	protected static function isPluginAvailable( $url ) {
-		$context = stream_context_create( [
-			'http' => [
-				'method' => 'HEAD',
-			],
-		] );
-
 		try {
-			file_get_contents( $url, false, $context );
+			$result = self::loadPluginData( $url );
+
+			return null !== $result;
 		} catch( ErrorException $e ) {
 			return false;
 		}
-
-		return true;
 	}
 
 	/**
@@ -120,11 +115,33 @@ class PluginAvailability {
 	 */
 	protected static function isPluginActivelyMaintained( $url ) {
 		try {
-			$body = file_get_contents( $url, false );
-		} catch( ErrorException $e ) {
-			return true;
-		}
+			$result = self::loadPluginData( $url );
 
-		return false === strpos( $body, 'It may no longer be maintained or supported and may have compatibility issues when used with more recent versions of WordPress' );
+			if ( null === $result ) {
+				return false;
+			}
+
+			$now          = new DateTime();
+			$last_updated = new DateTime( $result['last_updated'] );
+
+			return $last_updated < $now->modify( '-2 years' );
+		} catch ( ErrorException $e ) {
+			return false;
+		}
+	}
+
+	/**
+	 * Loads data for a given plugin and tries to interpret the result as JSON.
+
+	 * @param string $url Plugin URL.
+	 *
+	 * @return array|null Plugin data on success, null on failure.
+	 */
+	protected static function loadPluginData( $url ) {
+		$result = file_get_contents( $url, false );
+
+		$result = json_decode( $result, true );
+
+		return $result;
 	}
 }
