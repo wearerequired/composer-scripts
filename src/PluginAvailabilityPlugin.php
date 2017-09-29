@@ -1,19 +1,42 @@
 <?php
-/**
- * Helpful Composer scripts used by required.
- *
- * @package ComposerScripts
- */
 
-namespace Required\ComposerScripts;
+namespace phpDocumentor\Composer;
 
+use Composer\Composer;
 use Composer\DependencyResolver\Operation\InstallOperation;
+use Composer\EventDispatcher\EventSubscriberInterface;
 use Composer\Installer\PackageEvent;
+use Composer\IO\IOInterface;
 use Composer\Package\PackageInterface;
+use Composer\Plugin\PluginInterface;
+use Composer\Installer\PackageEvents;
 use DateTime;
 use ErrorException;
 
-class PluginAvailability {
+class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterface {
+	/** @var Composer */
+	private $composer;
+
+	/** @var IOInterface */
+	private $io;
+
+	public function activate( Composer $composer, IOInterface $io ) {
+		$this->composer = $composer;
+		$this->io       = $io;
+	}
+
+	public static function getSubscribedEvents() {
+		return [
+			PackageEvents::PRE_PACKAGE_INSTALL => [
+				[ 'checkAvailability' ],
+			],
+			PackageEvents::PRE_PACKAGE_UPDATE  => [
+				[ 'checkAvailability' ],
+				[ 'checkMaintenanceStatus', 1 ],
+			],
+		];
+	}
+
 	/**
 	 * Determines the availability of WordPress plugins being installed or updated.
 	 *
@@ -23,11 +46,11 @@ class PluginAvailability {
 	 *
 	 * @param PackageEvent $event The current event.
 	 */
-	public static function checkAvailability( PackageEvent $event ) {
-		$package = self::getPackage( $event );
+	public function checkAvailability( PackageEvent $event ) {
+		$package = $this->getPackage( $event );
 
-		if ( self::isWordPressPlugin( $package ) && ! self::isPluginAvailable( self::getPluginURL( $package ) ) ) {
-			$event->getIO()->writeError( sprintf(
+		if ( $this->isWordPressPlugin( $package ) && ! $this->isPluginAvailable( $this->getPluginURL( $package ) ) ) {
+			$this->io->writeError( sprintf(
 				'<warning>The plugin %s does not seem to be available in the WordPress Plugin Directory anymore',
 				$package->getName()
 			) );
@@ -42,11 +65,11 @@ class PluginAvailability {
 	 *
 	 * @param PackageEvent $event The current event.
 	 */
-	public static function checkMaintenanceStatus( PackageEvent $event ) {
-		$package = self::getPackage( $event );
+	public function checkMaintenanceStatus( PackageEvent $event ) {
+		$package = $this->getPackage( $event );
 
-		if ( self::isWordPressPlugin( $package ) && ! self::isPluginActivelyMaintained( self::getPluginURL( $package ) ) ) {
-			$event->getIO()->writeError( sprintf(
+		if ( $this->isWordPressPlugin( $package ) && ! $this->isPluginActivelyMaintained( $this->getPluginURL( $package ) ) ) {
+			$this->io->writeError( sprintf(
 				'<warning>The plugin %s has not been updated in over two years. Please double-check before using it.',
 				$package->getName()
 			) );
@@ -60,7 +83,7 @@ class PluginAvailability {
 	 *
 	 * @return PackageInterface The current package.
 	 */
-	protected static function getPackage( PackageEvent $event ) {
+	protected function getPackage( PackageEvent $event ) {
 		/* @var PackageInterface $package */
 		return $event->getOperation() instanceof InstallOperation ? $event->getOperation()->getPackage() : $event->getOperation()->getTargetPackage();
 	}
@@ -74,7 +97,7 @@ class PluginAvailability {
 	 *
 	 * @return bool True if package is a WordPress plugin, false otherwise.
 	 */
-	protected static function isWordPressPlugin( PackageInterface $package ) {
+	protected function isWordPressPlugin( PackageInterface $package ) {
 		return 'wordpress-plugin' === $package->getType() && 0 === strpos( $package->getName(), 'wpackagist-plugin/' );
 	}
 
@@ -85,7 +108,7 @@ class PluginAvailability {
 	 *
 	 * @return string The plugin URL.
 	 */
-	protected static function getPluginURL( PackageInterface $package ) {
+	protected function getPluginURL( PackageInterface $package ) {
 		return 'https://api.wordpress.org/plugins/info/1.0/' . str_replace( 'wpackagist-plugin/', '', $package->getName() ) . '.json';
 	}
 
@@ -96,12 +119,12 @@ class PluginAvailability {
 	 *
 	 * @return bool True if the plugin is available, false if otherwise (404 status).
 	 */
-	protected static function isPluginAvailable( $url ) {
+	protected function isPluginAvailable( $url ) {
 		try {
-			$result = self::loadPluginData( $url );
+			$result = $this->loadPluginData( $url );
 
 			return null !== $result;
-		} catch( ErrorException $e ) {
+		} catch ( ErrorException $e ) {
 			return false;
 		}
 	}
@@ -113,9 +136,9 @@ class PluginAvailability {
 	 *
 	 * @return bool True if the plugin has been updated in the last two years, false otherwise.
 	 */
-	protected static function isPluginActivelyMaintained( $url ) {
+	protected function isPluginActivelyMaintained( $url ) {
 		try {
-			$result = self::loadPluginData( $url );
+			$result = $this->loadPluginData( $url );
 
 			if ( null === $result ) {
 				return false;
@@ -132,13 +155,13 @@ class PluginAvailability {
 
 	/**
 	 * Loads data for a given plugin and tries to interpret the result as JSON.
-
+	 *
 	 * @param string $url Plugin URL.
 	 *
 	 * @return array|null Plugin data on success, null on failure.
 	 */
-	protected static function loadPluginData( $url ) {
-		$result = file_get_contents( $url, false );
+	protected function loadPluginData( $url ) {
+		$result = file_get_contents( $url );
 
 		$result = json_decode( $result, true );
 
