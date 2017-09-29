@@ -1,6 +1,6 @@
 <?php
 
-namespace phpDocumentor\Composer;
+namespace Required\ComposerScripts;
 
 use Composer\Composer;
 use Composer\DependencyResolver\Operation\InstallOperation;
