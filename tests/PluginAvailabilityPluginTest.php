@@ -127,8 +127,8 @@ class PluginAvailabilityPluginTest extends TestCase {
 		$this->composer->getEventDispatcher()->dispatchScript( ScriptEvents::POST_UPDATE_CMD );
 
 		$expectedOutput = <<<OUTPUT
-<warning>The plugin wpackagist-plugin/codestyling-localization has not been updated in over two years. Please double-check before using it.
-<warning>The plugin wpackagist-plugin/codestyling-localization does not seem to be available in the WordPress Plugin Directory anymore.
+<warning>The plugin wpackagist-plugin/codestyling-localization has not been updated in over two years. Please double-check before using it.</warning>
+<warning>The plugin wpackagist-plugin/codestyling-localization does not seem to be available in the WordPress Plugin Directory anymore.</warning>
 
 OUTPUT;
 		$this->assertSame( $expectedOutput, $this->io->getOutput() );
