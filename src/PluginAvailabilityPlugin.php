@@ -51,7 +51,7 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 
 		if ( $this->isWordPressPlugin( $package ) && ! $this->isPluginAvailable( $this->getPluginURL( $package ) ) ) {
 			$this->io->writeError( sprintf(
-				'<warning>The plugin %s does not seem to be available in the WordPress Plugin Directory anymore',
+				'<warning>The plugin %s does not seem to be available in the WordPress Plugin Directory anymore.',
 				$package->getName()
 			) );
 		}
