@@ -1,6 +1,6 @@
 # Composer Scripts
 
-A collection of useful Composer scripts used by required.
+A collection of useful Composer plugins used by required.
 
 ## Features
 
@@ -13,35 +13,23 @@ Inspired by [No Longer in Directory](https://wordpress.org/plugins/no-longer-in-
 
 ## Installation
 
-1. Install this script by using `composer require wearerequired/composer-scripts` (coming soon) or by loading it directly in your `composer.json` file:
-
-   ```json
-   {
-       "repositories": [
-           {
-               "type": "git",
-               "url": "https://github.com/wearerequired/composer-scripts"
-           }
-       ],
-       "require": {
-           "wearerequired/composer-scripts": "dev-master"
-       }
-   }
-   ```
-
-## Usage
-
-You can specify the scripts you want to use in the `scripts` section of your `composer.json` file. Here's an example:
+Install this script by using `composer require wearerequired/composer-scripts` (coming soon) or by loading it directly in your `composer.json` file:
 
 ```json
 {
-    "scripts": {
-        "pre-package-install": "Required\\ComposerScripts\\PluginAvailability::checkAvailability",
-        "pre-package-update": [
-            "Required\\ComposerScripts\\PluginAvailability::checkAvailability",
-            "Required\\ComposerScripts\\PluginAvailability::checkMaintenanceStatus"
-        ]
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/wearerequired/composer-scripts"
+        }
+    ],
+    "require": {
+        "wearerequired/composer-scripts": "dev-master"
     }
 }
 ```
+
+And that's it! From now on, this composer plugin will run automatically when updating or installing WordPress plugins through Composer.
+
+**Note:** it's recommended to put this into your global `~/.composer.composer.json` file instead of every project's configuration. This way, the script is only run locally and not elsewhere.
 
