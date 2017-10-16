@@ -30,6 +30,9 @@
 		}
 	},
 	"extra": {
-		"class": "Required\\ComposerScripts\\PluginAvailabilityPlugin"
+		"class": [
+			"Required\\ComposerScripts\\PluginAvailabilityPlugin",
+			"Required\\ComposerScripts\\PluginChangelogPlugin"
+		]
 	}
 }
