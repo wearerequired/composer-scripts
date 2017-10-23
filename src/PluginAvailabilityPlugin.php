@@ -128,7 +128,7 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 			$now          = new DateTime();
 			$last_updated = new DateTime( $result['last_updated'] );
 
-			return $last_updated < $now->modify( '-2 years' );
+			return $last_updated > $now->modify( '-2 years' );
 		} catch ( ErrorException $e ) {
 			return false;
 		}
