@@ -27,7 +27,7 @@ class PluginChangelogPlugin implements PluginInterface, EventSubscriberInterface
 
 	public static function getSubscribedEvents() {
 		return [
-			PackageEvents::PRE_PACKAGE_UPDATE => [
+			PackageEvents::POST_PACKAGE_UPDATE => [
 				[ 'printLinkToChangelog' ],
 			],
 		];
@@ -47,7 +47,7 @@ class PluginChangelogPlugin implements PluginInterface, EventSubscriberInterface
 
 		if ( $this->helper->isWordPressPlugin( $package ) ) {
 			$this->io->write( sprintf(
-				'Changelog: %s',
+				'    Changelog: %s',
 				$this->helper->getPluginChangelogURL( $package )
 			) );
 		}
