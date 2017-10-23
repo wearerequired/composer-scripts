@@ -12,6 +12,7 @@ use Composer\Plugin\PluginInterface;
 use Composer\Installer\PackageEvents;
 use DateTime;
 use ErrorException;
+use Required\ComposerScripts\WordPressPluginHelper;
 
 class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterface {
 	/** @var Composer */
@@ -20,9 +21,13 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 	/** @var IOInterface */
 	private $io;
 
+	/** @var WordPressPluginHelper */
+	private $helper;
+
 	public function activate( Composer $composer, IOInterface $io ) {
 		$this->composer = $composer;
 		$this->io       = $io;
+		$this->helper   = new WordPressPluginHelper();
 	}
 
 	public static function getSubscribedEvents() {
@@ -42,14 +47,14 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 	 *
 	 * If a plugin is not available in the WordPress Plugin Directory, it means that
 	 * it has been temporarily or permanently removed because guideline violations,
-	 * abandonce by its developer, or even security issues.
+	 * abandonment by its developer, or even security issues.
 	 *
 	 * @param PackageEvent $event The current event.
 	 */
 	public function checkAvailability( PackageEvent $event ) {
 		$package = $this->getPackage( $event );
 
-		if ( $this->isWordPressPlugin( $package ) && ! $this->isPluginAvailable( $this->getPluginURL( $package ) ) ) {
+		if ( $this->helper->isWordPressPlugin( $package ) && ! $this->isPluginAvailable( $this->helper->getPluginApiURL( $package ) ) ) {
 			$this->io->writeError( sprintf(
 				'<warning>The plugin %s does not seem to be available in the WordPress Plugin Directory anymore.</warning>',
 				$package->getName()
@@ -68,7 +73,7 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 	public function checkMaintenanceStatus( PackageEvent $event ) {
 		$package = $this->getPackage( $event );
 
-		if ( $this->isWordPressPlugin( $package ) && ! $this->isPluginActivelyMaintained( $this->getPluginURL( $package ) ) ) {
+		if ( $this->helper->isWordPressPlugin( $package ) && ! $this->isPluginActivelyMaintained( $this->helper->getPluginApiURL( $package ) ) ) {
 			$this->io->writeError( sprintf(
 				'<warning>The plugin %s has not been updated in over two years. Please double-check before using it.</warning>',
 				$package->getName()
@@ -86,30 +91,6 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 	protected function getPackage( PackageEvent $event ) {
 		/* @var PackageInterface $package */
 		return $event->getOperation() instanceof InstallOperation ? $event->getOperation()->getPackage() : $event->getOperation()->getTargetPackage();
-	}
-
-	/**
-	 * Determines whether a package is from WPackagist.
-	 *
-	 * WPackagist is a mirror of the WordPress Plugin Directory.
-	 *
-	 * @param PackageInterface $package The current package.
-	 *
-	 * @return bool True if package is a WordPress plugin, false otherwise.
-	 */
-	protected function isWordPressPlugin( PackageInterface $package ) {
-		return 'wordpress-plugin' === $package->getType() && 0 === strpos( $package->getName(), 'wpackagist-plugin/' );
-	}
-
-	/**
-	 * Returns the URL to the plugin in the WordPress Plugin Directory.
-	 *
-	 * @param PackageInterface $package The current package.
-	 *
-	 * @return string The plugin URL.
-	 */
-	protected function getPluginURL( PackageInterface $package ) {
-		return 'https://api.wordpress.org/plugins/info/1.0/' . str_replace( 'wpackagist-plugin/', '', $package->getName() ) . '.json';
 	}
 
 	/**
