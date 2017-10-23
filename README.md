@@ -4,12 +4,19 @@ A collection of useful Composer plugins used by required.
 
 ## Features
 
-### `PluginAvailability`
+### Plugin Availability
 
-Inspired by [No Longer in Directory](https://wordpress.org/plugins/no-longer-in-directory/), this class detects if a WordPress plugin (type `wordpress-plugin`) is being installed or updated from WPackagist that:
+Inspired by [No Longer in Directory](https://wordpress.org/plugins/no-longer-in-directory/), this feature detects if a WordPress plugin (type `wordpress-plugin`) is being installed or updated from WPackagist that:
 
 * has been pulled from the WordPress Plugin Directory but is still available via Subversion.
 * has not been updated in over two years and thus should be used carefully.
+
+### Plugin Changelog
+
+This feature prints a link to the changelog on WordPress.org if a WordPress plugin has been installed or updated.
+
+![Example](https://user-images.githubusercontent.com/617637/31888603-1942a592-b7fd-11e7-9a1f-40e5f0ebf02a.png)
+
 
 ## Installation
 
