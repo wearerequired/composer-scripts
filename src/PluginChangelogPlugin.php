@@ -34,11 +34,8 @@ class PluginChangelogPlugin implements PluginInterface, EventSubscriberInterface
 	}
 
 	/**
-	 * Determines the availability of WordPress plugins being installed or updated.
-	 *
-	 * If a plugin is not available in the WordPress Plugin Directory, it means that
-	 * it has been temporarily or permanently removed because guideline violations,
-	 * abandonment by its developer, or even security issues.
+	 * Prints a link to the changelog on WordPress.org after it's being
+	 * installed or updated.
 	 *
 	 * @param PackageEvent $event The current event.
 	 */
