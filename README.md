@@ -13,23 +13,8 @@ Inspired by [No Longer in Directory](https://wordpress.org/plugins/no-longer-in-
 
 ## Installation
 
-Install this script by using `composer require wearerequired/composer-scripts` (coming soon) or by loading it directly in your `composer.json` file:
-
-```json
-{
-    "repositories": [
-        {
-            "type": "git",
-            "url": "https://github.com/wearerequired/composer-scripts"
-        }
-    ],
-    "require": {
-        "wearerequired/composer-scripts": "dev-master"
-    }
-}
-```
-
+Install this script by using `composer global require wearerequired/composer-scripts`.
 And that's it! From now on, this composer plugin will run automatically when updating or installing WordPress plugins through Composer.
 
-**Note:** it's recommended to put this into your global `~/.composer.composer.json` file instead of every project's configuration. This way, the script is only run locally and not elsewhere.
+**Note:** It's recommended to install this into your global `~/.composer/composer.json` file instead of every project's configuration. This way, the script is only run locally and not elsewhere.
 
