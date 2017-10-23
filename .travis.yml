@@ -19,3 +19,11 @@ matrix:
   fast_finish: true
   allow_failures:
     - php: nightly
+
+notifications:
+  slack:
+    rooms:
+      secure: rKzug+geIBkGkxB/NMagJ8kmwx1Z0KiuppyZUSv9S3UPHXu5z1uawmFq5AmMxml0jqAoNPtK6FnpWWJPHIH0vbF/0fuYXLmGR6j+owBXCVSxgLTfi9GF1bqHV7vYcrLm1DXN3uxmXvDjNgePIxTKuCxRzKSkKhNYJ6mQL3vwYMjTZiMeYbl/aIOPJVZpvkSAcc3vyYJqdn5SMDAs5QMFXVL7w86SNiPo0PgIjKbG55zAHffOg8JA2w1Ro/4XOTJr63syb525cKzV6VyGjF9Y2Lf8+M8NdMnEZL6r20I3aFNgdfwO7V0qG/BfIMvNN/CECIt8EQ3XJnmi1pOGP9LoKFKtslMgVfJbkDDFN25srg4+BDTlsKtMWAZAo7XyeJ0O7DsmfLC6+GC2+swTnQgKk4TbbCo8fYuDYM2hA7nuFCJAPpZCA6JIzYhZoBVKWlZIPRluAv07vjR680CiCVUn3L5/LCQ63+5PAIEHyECSP3vmxfppXyhfj80TOEWE41anX0BqSKCmH14y/axAQSWdxn444UC3X+PGFK+dIHcPKQI4R2F+kZgUuIbO2HpQetOU3NBvJamjNQntvhiFZ75pQVvBK+j/lmFZ+vs4ijyv9uXXV+Qh2MaWeYb8OuLkA7X5MCRI+YwTeaqBQzFccVLSy9MUHI123V9FM9DcQbkhwS4=
+    on_start: never
+    on_failure: always
+    on_success: change
