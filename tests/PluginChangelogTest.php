@@ -114,7 +114,7 @@ class PluginChangelogPluginTest extends TestCase {
 		$operation = $this->getUpdateOperation();
 
 		$this->composer->getEventDispatcher()->dispatchPackageEvent(
-			PackageEvents::PRE_PACKAGE_UPDATE,
+			PackageEvents::POST_PACKAGE_UPDATE,
 			false,
 			new DefaultPolicy( false, false ),
 			new Pool(),
@@ -127,7 +127,7 @@ class PluginChangelogPluginTest extends TestCase {
 		$this->composer->getEventDispatcher()->dispatchScript( ScriptEvents::POST_UPDATE_CMD );
 
 		$expectedOutput = <<<OUTPUT
-Changelog: https://wordpress.org/plugins/codestyling-localization/#developers
+    Changelog: https://wordpress.org/plugins/codestyling-localization/#developers
 
 OUTPUT;
 		$this->assertSame( $expectedOutput, $this->io->getOutput() );
