@@ -8,7 +8,7 @@ php:
 
 before_script:
   - composer self-update
-  - composer install --dev
+  - composer install --dev --prefer-dist
 
 script: vendor/bin/phpunit --configuration phpunit.xml.dist
 
