@@ -36,8 +36,9 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 				[ 'checkAvailability' ],
 			],
 			PackageEvents::PRE_PACKAGE_UPDATE  => [
-				[ 'checkAvailability' ],
-				[ 'checkMaintenanceStatus', 1 ],
+				[ 'checkAvailability', 10 ],
+				[ 'checkMaintenanceStatus', 5 ],
+				[ 'checkCompatibilityStatus', 5 ],
 			],
 		];
 	}
@@ -54,7 +55,10 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 	public function checkAvailability( PackageEvent $event ) {
 		$package = $this->getPackage( $event );
 
-		if ( $this->helper->isWordPressPlugin( $package ) && ! $this->isPluginAvailable( $this->helper->getPluginApiURL( $package ) ) ) {
+		if (
+			$this->helper->isWordPressPlugin( $package ) &&
+			! $this->isPluginAvailable( $this->helper->getPluginApiURL( $package ) )
+		) {
 			$this->io->writeError( sprintf(
 				'<warning>The plugin %s does not seem to be available in the WordPress Plugin Directory anymore.</warning>',
 				$package->getName()
@@ -73,19 +77,36 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 	public function checkMaintenanceStatus( PackageEvent $event ) {
 		$package = $this->getPackage( $event );
 
-		if ( $this->helper->isWordPressPlugin( $package ) && ! $this->hasPluginBeenTestedWithLatestVersions( $this->helper->getPluginApiURL( $package ) ) ) {
-			$this->io->writeError( sprintf(
-				'<warning>The plugin %s has not been tested with the latest 3 major releases of WordPress. Please double-check before using it.</warning>',
-				$package->getName()
-			) );
-
-			// We don't want to display two warnings for the same plugin.
-			return;
-		}
-
-		if ( $this->helper->isWordPressPlugin( $package ) && ! $this->isPluginActivelyMaintained( $this->helper->getPluginApiURL( $package ) ) ) {
+		if (
+			$this->helper->isWordPressPlugin( $package ) &&
+			$this->isPluginAvailable( $this->helper->getPluginApiURL( $package ) ) &&
+			! $this->isPluginActivelyMaintained( $this->helper->getPluginApiURL( $package ) )
+		) {
 			$this->io->writeError( sprintf(
 				'<warning>The plugin %s has not been updated in over two years. Please double-check before using it.</warning>',
+				$package->getName()
+			) );
+		}
+	}
+
+	/**
+	 * Determines the compatibility status of WordPress plugins being installed or updated.
+	 *
+	 * Plugins that haven't been tested with the last 3 major releases of WordPress should be used with caution, as it means
+	 * they might not be compatible with the latest versions of WordPress.
+	 *
+	 * @param PackageEvent $event The current event.
+	 */
+	public function checkCompatibilityStatus( PackageEvent $event ) {
+		$package = $this->getPackage( $event );
+
+		if (
+			$this->helper->isWordPressPlugin( $package ) &&
+			$this->isPluginAvailable( $this->helper->getPluginApiURL( $package ) ) &&
+			! $this->hasPluginBeenTestedWithLatestVersions( $this->helper->getPluginApiURL( $package ) )
+		) {
+			$this->io->writeError( sprintf(
+				'<warning>The plugin %s has not been tested with the last 3 major releases of WordPress. Please double-check before using it.</warning>',
 				$package->getName()
 			) );
 		}
@@ -113,7 +134,7 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 	protected function isPluginAvailable( $url ) {
 		$result = $this->loadPluginData( $url );
 
-		return null !== $result;
+		return null !== $result && ! isset( $result['error'] );
 	}
 
 	/**
@@ -126,7 +147,7 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 	protected function isPluginActivelyMaintained( $url ) {
 		$result = $this->loadPluginData( $url );
 
-		if ( null === $result ) {
+		if ( null === $result || ! isset( $result['last_updated'] ) ) {
 			return false;
 		}
 
@@ -146,14 +167,14 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 	protected function hasPluginBeenTestedWithLatestVersions( $url ) {
 		$result = $this->loadPluginData( $url );
 
-		if ( null === $result ) {
+		if ( null === $result || ! isset( $result['tested'] ) ) {
 			return false;
 		}
 
 		$tested     = $this->incrementVersion( $result['tested'], 3 );
 		$wp_version = $this->getLatestWordPressVersion();
 
-		return version_compare( $tested, $wp_version, '<' );
+		return version_compare( $tested, $wp_version, '>=' );
 	}
 
 	/**
@@ -170,7 +191,7 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 			$parts = explode( '.', $version );
 			$parts = array_splice( $parts, 0, 2 );
 
-			if ( $parts[1] + 1 < 10 ) {
+			if ( $parts[1] < 9 ) {
 				$parts[1]++;
 			} else {
 				$parts[1] = 0;
