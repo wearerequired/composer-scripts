@@ -4,15 +4,16 @@ namespace Required\ComposerScripts;
 
 use Composer\Composer;
 use Composer\DependencyResolver\Operation\InstallOperation;
+use Composer\Downloader\TransportException;
 use Composer\EventDispatcher\EventSubscriberInterface;
+use Composer\Factory;
 use Composer\Installer\PackageEvent;
 use Composer\IO\IOInterface;
 use Composer\Package\PackageInterface;
 use Composer\Plugin\PluginInterface;
 use Composer\Installer\PackageEvents;
+use Composer\Util\RemoteFilesystem;
 use DateTime;
-use ErrorException;
-use Required\ComposerScripts\WordPressPluginHelper;
 
 class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterface {
 	/** @var Composer */
@@ -24,16 +25,21 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 	/** @var WordPressPluginHelper */
 	private $helper;
 
+	/** @var RemoteFilesystem */
+	private $rfs;
+
 	public function activate( Composer $composer, IOInterface $io ) {
 		$this->composer = $composer;
 		$this->io       = $io;
+		$this->rfs      = Factory::createRemoteFilesystem( $this->io );
 		$this->helper   = new WordPressPluginHelper();
 	}
 
 	public static function getSubscribedEvents() {
 		return [
 			PackageEvents::PRE_PACKAGE_INSTALL => [
-				[ 'checkAvailability' ],
+				[ 'checkAvailability', 10 ],
+				[ 'checkCompatibilityStatus', 5 ],
 			],
 			PackageEvents::PRE_PACKAGE_UPDATE  => [
 				[ 'checkAvailability', 10 ],
@@ -55,14 +61,17 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 	public function checkAvailability( PackageEvent $event ) {
 		$package = $this->getPackage( $event );
 
-		if (
-			$this->helper->isWordPressPlugin( $package ) &&
-			! $this->isPluginAvailable( $this->helper->getPluginApiURL( $package ) )
-		) {
-			$this->io->writeError( sprintf(
-				'<warning>The plugin %s does not seem to be available in the WordPress Plugin Directory anymore.</warning>',
-				$package->getName()
-			) );
+		try {
+			if ( $this->helper->isWordPressPlugin( $package ) && ! $this->isPluginAvailable( $this->helper->getPluginApiURL( $package ) ) ) {
+				$this->io->writeError( sprintf(
+					'<warning>The plugin %s does not seem to be available in the WordPress Plugin Directory anymore.</warning>',
+					$package->getName()
+				) );
+			}
+		} catch ( TransportException $e ) {
+			$this->io->writeError(
+				'<warning>Could not reach WordPress.org to verify plugin status.</warning>'
+			);
 		}
 	}
 
@@ -77,15 +86,21 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 	public function checkMaintenanceStatus( PackageEvent $event ) {
 		$package = $this->getPackage( $event );
 
-		if (
-			$this->helper->isWordPressPlugin( $package ) &&
-			$this->isPluginAvailable( $this->helper->getPluginApiURL( $package ) ) &&
-			! $this->isPluginActivelyMaintained( $this->helper->getPluginApiURL( $package ) )
-		) {
-			$this->io->writeError( sprintf(
-				'<warning>The plugin %s has not been updated in over two years. Please double-check before using it.</warning>',
-				$package->getName()
-			) );
+		try {
+			if (
+				$this->helper->isWordPressPlugin( $package ) &&
+				$this->isPluginAvailable( $this->helper->getPluginApiURL( $package ) ) &&
+				! $this->isPluginActivelyMaintained( $this->helper->getPluginApiURL( $package ) )
+			) {
+				$this->io->writeError( sprintf(
+					'<warning>The plugin %s has not been updated in over two years. Please double-check before using it.</warning>',
+					$package->getName()
+				) );
+			}
+		} catch ( TransportException $e ) {
+			$this->io->writeError(
+				'<warning>Could not reach WordPress.org to verify plugin status.</warning>'
+			);
 		}
 	}
 
@@ -100,15 +115,21 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 	public function checkCompatibilityStatus( PackageEvent $event ) {
 		$package = $this->getPackage( $event );
 
-		if (
-			$this->helper->isWordPressPlugin( $package ) &&
-			$this->isPluginAvailable( $this->helper->getPluginApiURL( $package ) ) &&
-			! $this->hasPluginBeenTestedWithLatestVersions( $this->helper->getPluginApiURL( $package ) )
-		) {
-			$this->io->writeError( sprintf(
-				'<warning>The plugin %s has not been tested with the last 3 major releases of WordPress. Please double-check before using it.</warning>',
-				$package->getName()
-			) );
+		try {
+			if (
+				$this->helper->isWordPressPlugin( $package ) &&
+				$this->isPluginAvailable( $this->helper->getPluginApiURL( $package ) ) &&
+				! $this->hasPluginBeenTestedWithLatestVersions( $this->helper->getPluginApiURL( $package ) )
+			) {
+				$this->io->writeError( sprintf(
+					'<warning>The plugin %s has not been tested with the last 3 major releases of WordPress. Please double-check before using it.</warning>',
+					$package->getName()
+				) );
+			}
+		} catch ( TransportException $e ) {
+			$this->io->writeError(
+				'<warning>Could not reach WordPress.org to verify plugin status.</warning>'
+			);
 		}
 	}
 
@@ -127,6 +148,8 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 	/**
 	 * Determines whether a plugin is available in the WordPress Plugin Directory.
 	 *
+	 * @throws TransportException
+	 *
 	 * @param string $url URL to the plugin in the WordPress Plugin Directory.
 	 *
 	 * @return bool True if the plugin is available, false if otherwise (404 status).
@@ -139,6 +162,8 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 
 	/**
 	 * Determines whether a plugin is actively maintained or not.
+	 *
+	 * @throws TransportException
 	 *
 	 * @param string $url URL to the plugin in the WordPress Plugin Directory.
 	 *
@@ -200,7 +225,7 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 
 			$version = implode( '.', $parts );
 
-			$steps --;
+			$steps--;
 		}
 
 		return $version;
@@ -229,12 +254,14 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 	/**
 	 * Loads data for a given plugin and tries to interpret the result as JSON.
 	 *
+	 * @throws TransportException
+	 *
 	 * @param string $url Plugin URL.
 	 *
 	 * @return array|null Plugin data on success, null on failure.
 	 */
 	protected function loadPluginData( $url ) {
-		$result = file_get_contents( $url );
+		$result = $this->rfs->getContents( $url, $url, false );
 
 		$result = json_decode( $result, true );
 
