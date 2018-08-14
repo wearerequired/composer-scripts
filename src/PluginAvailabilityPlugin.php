@@ -28,11 +28,20 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 	/** @var RemoteFilesystem */
 	private $rfs;
 
+	public function __construct( RemoteFilesystem $rfs = null ) {
+		if ( $rfs !== null ) {
+			$this->rfs = $rfs;
+		}
+	}
+
 	public function activate( Composer $composer, IOInterface $io ) {
 		$this->composer = $composer;
 		$this->io       = $io;
-		$this->rfs      = Factory::createRemoteFilesystem( $this->io );
 		$this->helper   = new WordPressPluginHelper();
+
+		if ( $this->rfs === null ) {
+			$this->rfs = Factory::createRemoteFilesystem( $this->io );
+		}
 	}
 
 	public static function getSubscribedEvents() {
