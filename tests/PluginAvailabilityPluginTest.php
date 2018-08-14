@@ -90,7 +90,7 @@ class PluginAvailabilityPluginTest extends TestCase {
 	/**
 	 * @return UpdateOperation
 	 */
-	private function getUpdateOperation() {
+	private function getUpdateOperationForRemovedPlugin() {
 		$initialPackage = new Package( 'wpackagist-plugin/codestyling-localization', '1.99', 'v1.99' );
 		$initialPackage->setType( 'wordpress-plugin' );
 		$initialPackage->setSourceUrl( 'https://plugins.svn.wordpress.org/codestyling-localization/' );
@@ -102,6 +102,21 @@ class PluginAvailabilityPluginTest extends TestCase {
 		return new UpdateOperation( $initialPackage, $targetPackage );
 	}
 
+	/**
+	 * @return UpdateOperation
+	 */
+	private function getUpdateOperationForUnmaintainedPlugin() {
+		$initialPackage = new Package( 'wpackagist-plugin/nice-search', '0.-1', 'v0.1' );
+		$initialPackage->setType( 'wordpress-plugin' );
+		$initialPackage->setSourceUrl( 'https://plugins.svn.wordpress.org/nice-search/' );
+
+		$targetPackage = new Package( 'wpackagist-plugin/nice-search', '0.5', 'v0.5' );
+		$targetPackage->setType( 'wordpress-plugin' );
+		$initialPackage->setSourceUrl( 'https://plugins.svn.wordpress.org/nice-search/' );
+
+		return new UpdateOperation( $initialPackage, $targetPackage );
+	}
+
 	public function test_it_is_registered_and_activated() {
 		$plugin = new PluginAvailabilityPlugin();
 
@@ -109,9 +124,9 @@ class PluginAvailabilityPluginTest extends TestCase {
 		$this->assertContains( $plugin, $this->composer->getPluginManager()->getPlugins() );
 	}
 
-	public function test_it_receives_event() {
+	public function test_removed_plugin() {
 		$this->addComposerPlugin( new PluginAvailabilityPlugin() );
-		$operation = $this->getUpdateOperation();
+		$operation = $this->getUpdateOperationForRemovedPlugin();
 
 		$this->composer->getEventDispatcher()->dispatchPackageEvent(
 			PackageEvents::PRE_PACKAGE_UPDATE,
@@ -127,8 +142,32 @@ class PluginAvailabilityPluginTest extends TestCase {
 		$this->composer->getEventDispatcher()->dispatchScript( ScriptEvents::POST_UPDATE_CMD );
 
 		$expectedOutput = <<<OUTPUT
-<warning>The plugin wpackagist-plugin/codestyling-localization has not been updated in over two years. Please double-check before using it.</warning>
 <warning>The plugin wpackagist-plugin/codestyling-localization does not seem to be available in the WordPress Plugin Directory anymore.</warning>
+
+OUTPUT;
+		$this->assertSame( $expectedOutput, $this->io->getOutput() );
+	}
+
+	public function test_unmaintained_plugin() {
+		$this->addComposerPlugin( new PluginAvailabilityPlugin() );
+		$operation = $this->getUpdateOperationForUnmaintainedPlugin();
+
+		$this->composer->getEventDispatcher()->dispatchPackageEvent(
+			PackageEvents::PRE_PACKAGE_UPDATE,
+			false,
+			new DefaultPolicy( false, false ),
+			new Pool(),
+			new CompositeRepository( [] ),
+			new Request(),
+			[ $operation ],
+			$operation
+		);
+
+		$this->composer->getEventDispatcher()->dispatchScript( ScriptEvents::POST_UPDATE_CMD );
+
+		$expectedOutput = <<<OUTPUT
+<warning>The plugin wpackagist-plugin/nice-search has not been updated in over two years. Please double-check before using it.</warning>
+<warning>The plugin wpackagist-plugin/nice-search has not been tested with the last 3 major releases of WordPress. Please double-check before using it.</warning>
 
 OUTPUT;
 		$this->assertSame( $expectedOutput, $this->io->getOutput() );
