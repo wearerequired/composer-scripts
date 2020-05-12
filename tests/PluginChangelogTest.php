@@ -116,10 +116,7 @@ class PluginChangelogPluginTest extends TestCase {
 		$this->composer->getEventDispatcher()->dispatchPackageEvent(
 			PackageEvents::POST_PACKAGE_UPDATE,
 			false,
-			new DefaultPolicy( false, false ),
-			new Pool(),
 			new CompositeRepository( [] ),
-			new Request(),
 			[ $operation ],
 			$operation
 		);
