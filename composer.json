@@ -1,38 +1,41 @@
 {
-	"name": "wearerequired/composer-scripts",
-	"description": "Helpful Composer scripts used by required.",
-	"type": "composer-plugin",
-	"license": "GPL-2.0+",
-	"authors": [
-		{
-			"name": "required",
-			"email": "info@required.ch",
-			"homepage": "https://required.com",
-			"role": "Company"
-		},
-		{
-			"name": "Pascal Birchler",
-			"email": "pascal@required.ch",
-			"role": "Developer"
-		}
-	],
-	"require": {
-		"php": ">=5.6",
-		"composer-plugin-api": "^1.1"
-	},
-	"require-dev": {
-		"phpunit/phpunit": "^6.4",
-		"composer/composer": "^1.5"
-	},
-	"autoload": {
-		"psr-4": {
-			"Required\\ComposerScripts\\": "src"
-		}
-	},
-	"extra": {
-		"class": [
-			"Required\\ComposerScripts\\PluginAvailabilityPlugin",
-			"Required\\ComposerScripts\\PluginChangelogPlugin"
-		]
-	}
+  "name": "wearerequired/composer-scripts",
+  "type": "composer-plugin",
+  "description": "Helpful Composer scripts used by required.",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "required",
+      "email": "info@required.ch",
+      "homepage": "https://required.com",
+      "role": "Company"
+    },
+    {
+      "name": "Pascal Birchler",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": "^7.0",
+    "composer-plugin-api": "^1.0 || ^2.0"
+  },
+  "require-dev": {
+    "composer/composer": "1.6.* || 2.0.*@dev",
+    "composer/semver": "1.0.* || 2.0.*@dev",
+    "phpunit/phpunit": "^6.4"
+  },
+  "extra": {
+    "class": [
+      "Required\\ComposerScripts\\PluginAvailabilityPlugin",
+      "Required\\ComposerScripts\\PluginChangelogPlugin"
+    ]
+  },
+  "autoload": {
+    "psr-4": {
+      "Required\\ComposerScripts\\": "src"
+    }
+  },
+  "scripts": {
+    "test": "@php vendor/bin/phpunit"
+  }
 }

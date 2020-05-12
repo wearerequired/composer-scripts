@@ -4,6 +4,7 @@ namespace Required\ComposerScripts;
 
 use Composer\Composer;
 use Composer\DependencyResolver\Operation\InstallOperation;
+use Composer\DependencyResolver\Operation\UpdateOperation;
 use Composer\Downloader\TransportException;
 use Composer\EventDispatcher\EventSubscriberInterface;
 use Composer\Factory;
@@ -12,7 +13,7 @@ use Composer\IO\IOInterface;
 use Composer\Package\PackageInterface;
 use Composer\Plugin\PluginInterface;
 use Composer\Installer\PackageEvents;
-use Composer\Util\RemoteFilesystem;
+use Composer\Util\HttpDownloader;
 use DateTime;
 
 class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterface {
@@ -25,16 +26,51 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 	/** @var WordPressPluginHelper */
 	private $helper;
 
-	/** @var RemoteFilesystem */
-	private $rfs;
+	/** @var HttpDownloader */
+	private $httpDownloader;
 
+	/**
+	 * Applies plugin modifications to Composer.
+	 *
+	 * @param \Composer\Composer       $composer Composer.
+	 * @param \Composer\IO\IOInterface $io       Input/Output helper interface.
+	 */
 	public function activate( Composer $composer, IOInterface $io ) {
-		$this->composer = $composer;
-		$this->io       = $io;
-		$this->rfs      = Factory::createRemoteFilesystem( $this->io );
-		$this->helper   = new WordPressPluginHelper();
+		$this->composer       = $composer;
+		$this->io             = $io;
+		$this->httpDownloader = Factory::createHttpDownloader( $this->io, $this->composer->getConfig() );
+		$this->helper         = new WordPressPluginHelper();
 	}
 
+	/**
+	 * Removes any hooks from Composer.
+	 *
+	 * This will be called when a plugin is deactivated before being
+	 * uninstalled, but also before it gets upgraded to a new version
+	 * so the old one can be deactivated and the new one activated.
+	 *
+	 * @param \Composer\Composer       $composer Composer.
+	 * @param \Composer\IO\IOInterface $io       Input/Output helper interface.
+	 */
+	public function deactivate( Composer $composer, IOInterface $io ) {
+	}
+
+	/**
+	 * Prepares the plugin to be uninstalled.
+	 *
+	 * This will be called after deactivate.
+	 *
+	 * @param \Composer\Composer       $composer Composer.
+	 * @param \Composer\IO\IOInterface $io       Input/Output helper interface.
+	 */
+	public function uninstall( Composer $composer, IOInterface $io ) {
+	}
+
+	/**
+	 * Returns an array of event names this subscriber wants to listen to.
+	 *
+	 * @return array The event names to listen to.
+	 */
 	public static function getSubscribedEvents() {
 		return [
 			PackageEvents::PRE_PACKAGE_INSTALL => [
@@ -106,8 +142,16 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 	 * @return PackageInterface The current package.
 	 */
 	protected function getPackage( PackageEvent $event ) {
-		/* @var PackageInterface $package */
-		return $event->getOperation() instanceof InstallOperation ? $event->getOperation()->getPackage() : $event->getOperation()->getTargetPackage();
+		$operation = $event->getOperation();
+		if ( $operation instanceof InstallOperation ) {
+			return $operation->getPackage();
+		}
+
+		if ( $operation instanceof UpdateOperation ) {
+			return $operation->getTargetPackage();
+		}
+
+		return null;
 	}
 
 	/**
@@ -157,7 +201,7 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 	 * @return array|null Plugin data on success, null on failure.
 	 */
 	protected function loadPluginData( $url ) {
-		$result = $this->rfs->getContents( $url, $url, false );
+		$result = $this->httpDownloader->get( $url )->getBody();
 
 		$result = json_decode( $result, true );
 
