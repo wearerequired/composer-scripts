@@ -17,11 +17,11 @@
   ],
   "require": {
     "php": "^7.0",
-    "composer-plugin-api": "^1.0 || ^2.0"
+    "composer-plugin-api": "^2.0"
   },
   "require-dev": {
-    "composer/composer": "1.6.* || 2.0.*@dev",
-    "composer/semver": "1.0.* || 2.0.*@dev",
+    "composer/composer": "2.0.*@dev",
+    "composer/semver": "^3",
     "phpunit/phpunit": "^6.4"
   },
   "extra": {
