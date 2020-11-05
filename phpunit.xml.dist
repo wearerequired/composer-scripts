@@ -1,28 +1,25 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/4.5/phpunit.xsd"
-         backupGlobals="false"
-         colors="true"
-         bootstrap="vendor/autoload.php"
+<?xml version="1.0"?>
+<phpunit
+		bootstrap="vendor/autoload.php"
+		backupGlobals="false"
+		colors="true"
+		convertErrorsToExceptions="true"
+		convertNoticesToExceptions="true"
+		convertWarningsToExceptions="true"
 >
-    <php>
-        <ini name="error_reporting" value="-1" />
-    </php>
+	<testsuites>
+		<testsuite name="composer-scripts Test Suite">
+			<directory>./tests/</directory>
+		</testsuite>
+	</testsuites>
 
-    <testsuites>
-        <testsuite name="composer-scripts Test Suite">
-            <directory>./tests/</directory>
-        </testsuite>
-    </testsuites>
+	<logging>
+		<log type="coverage-clover" target="clover.xml"/>
+	</logging>
 
-    <filter>
-        <whitelist>
-            <directory>./</directory>
-            <exclude>
-                <directory>./vendor</directory>
-                <directory>./tests</directory>
-            </exclude>
-        </whitelist>
-    </filter>
+	<filter>
+		<whitelist addUncoveredFilesFromWhitelist="true">
+			<directory suffix=".php">src</directory>
+		</whitelist>
+	</filter>
 </phpunit>
