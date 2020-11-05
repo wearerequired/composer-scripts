@@ -36,7 +36,7 @@ class PluginAvailabilityPluginTest extends TestCase {
 	/**
 	 * @inheritdoc
 	 */
-	protected function setUp() {
+	protected function setUp(): void {
 		$this->tempDir = __DIR__ . '/temp';
 
 		$this->config = new Config( false, realpath( __DIR__ . '/fixtures/local' ) );
@@ -60,7 +60,7 @@ class PluginAvailabilityPluginTest extends TestCase {
 	/**
 	 * @inheritdoc
 	 */
-	protected function tearDown() {
+	protected function tearDown(): void {
 		$this->cleanTempDir();
 	}
 
