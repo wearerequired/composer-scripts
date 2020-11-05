@@ -25,3 +25,6 @@ And that's it! From now on, this composer plugin will run automatically when upd
 
 **Note:** It's recommended to install this into your global `~/.composer/composer.json` file instead of every project's configuration. This way, the script is only run locally and not elsewhere.
 
+<br>
+
+[![a required open source product - let's get in touch](https://media.required.com/images/open-source-banner.png)](https://required.com/en/lets-get-in-touch/)
