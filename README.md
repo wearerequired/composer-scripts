@@ -1,4 +1,4 @@
-# Composer Scripts &middot; [![Build Status](https://travis-ci.org/wearerequired/composer-scripts.svg?branch=master)](https://travis-ci.org/wearerequired/composer-scripts)
+# Composer Scripts &middot; ![PHPUnit](https://github.com/wearerequired/composer-scripts/workflows/PHPUnit/badge.svg)
 
 A collection of useful Composer plugins used by required.
 
