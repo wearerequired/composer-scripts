@@ -201,7 +201,16 @@ class PluginAvailabilityPlugin implements PluginInterface, EventSubscriberInterf
 	 * @return array|null Plugin data on success, null on failure.
 	 */
 	protected function loadPluginData( $url ) {
-		$result = $this->httpDownloader->get( $url )->getBody();
+		try {
+			$result = $this->httpDownloader->get( $url )->getBody();
+		} catch ( TransportException $e ) {
+			// If a plugin is not found a 404 HTTP status is also returned.
+			if ( 404 === $e->getStatusCode() ) {
+				$result = $e->getResponse();
+			} else {
+				throw $e;
+			}
+		}
 
 		$result = json_decode( $result, true );
 
